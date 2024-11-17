@@ -12,6 +12,7 @@ import SwiftUI
     var body: some Scene {
         WindowGroup {
             ContentView(model: model)
+                .environment(model)
                 .accentColor(.green)
                 .onAppear {
                     if model.location.locationManager.authorizationStatus == .notDetermined {

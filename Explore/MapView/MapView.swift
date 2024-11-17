@@ -30,7 +30,7 @@ struct ContentView: View {
                                     .scaledToFit()
                                     .overlay(Circle().stroke(Color.white, lineWidth: 1))
                                     .blur(radius: 0.11)
-
+                                
                             } else {
                                 Image(systemName: "mountain.2.fill")
                                     .font(.system(size: 7))
@@ -57,22 +57,19 @@ struct ContentView: View {
                         .shadow(radius: 10)
                         .opacity(model.shownLocations?.contains(location) ?? false ? 1.0 : 0.0)
                         .animation(.default, value: model.selectedLocation)
-                        .onTapGesture {
-                            model.selectLocation(location: location)
-                        }
-                        
+                        .onTapGesture { model.selectLocation(location) }
                     }
                 }
             }
-            .environment(\.colorScheme, model.settings.mapColorScheme)
+            .environment(\.colorScheme, model.view.mapColorScheme)
             .mapStyle(.standard(pointsOfInterest: .including([])))
             .accentColor(.green.opacity(0.8))
             .onMapCameraChange { map in
                 withAnimation {
                     let region = map.region
-                    model.filterLocations(in: region)
+                    model.filterLocations(region)
                     model.location.zoomLevel = region.span.latitudeDelta
-                }   
+                }
             }
             
             // Logo & Controls
@@ -88,7 +85,7 @@ struct ContentView: View {
             SearchView(model: model)
                 .sheetMaterial()
                 .interactiveDismissDisabled()
-                .presentationDetents([.fraction(4/10), .fraction(1/6)], selection: $model.view.detent)
+                .presentationDetents([.large, .fraction(4/10), .fraction(1/6)], selection: $model.view.detent)
                 .presentationBackgroundInteraction(.enabled)
         }
     }

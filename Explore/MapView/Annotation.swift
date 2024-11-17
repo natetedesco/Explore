@@ -13,7 +13,6 @@ struct CustomAnnotation: View {
     var body: some View {
         VStack {
             if location.priority == 1 || location.priority == 2 {
-                
                 Image(location.name)
                     .resizable()
                     .frame(
@@ -24,8 +23,6 @@ struct CustomAnnotation: View {
                     .overlay(Circle().stroke(Color.white, lineWidth: 1))
                 
             } else {
-                
-                
                 Image(systemName: "mountain.2.fill")
                     .font(.system(size: 7))
                     .fontWeight(.ultraLight)
@@ -40,20 +37,15 @@ struct CustomAnnotation: View {
                                     gradient: Gradient(colors: [.green, .black]),
                                     center: .center,
                                     startRadius: 0,
-                                    endRadius: 56
-                                )
-                            )
-                            .clipped()
-                    )
+                                    endRadius: 56))
+                            .clipped())
             }
         }
         .clipShape(Circle())
         .shadow(radius: 10)
         .opacity(model.shownLocations?.contains(location) ?? false ? 1.0 : 0.0)
         .animation(.default, value: model.selectedLocation)
-        .onTapGesture {
-            model.selectLocation(location: location)
-        }
+        .onTapGesture { model.selectLocation(location) }
     }
 }
 

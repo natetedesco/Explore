@@ -12,100 +12,82 @@ import MapKit
 @Observable class Model {
     var view = ViewModel()
     var location = LocationManager()
-    var settings = Settings()
     
-    // Search
-    var shownLocations: [Location]?
-    var selectedTag: String? { didSet { filterLocations(in: location.lastSavedCameraPosition.region) }}
     var search: String = ""
+    var selectedTag: String? { didSet { filterLocations(location.lastSavedPosition.region) }}
     
+    var shownLocations: [Location]?
     var selectedLocation: Location?
-    var selectedImage: UIImage?
-    var description: String = ""
-    var images: [UIImage]?
     
-    var favoriteLocations: [Location] = []
-    var visitedLocations: [Location] = []
-
-    init() {
-        filterLocations(in: location.cameraPosition.region)
-        loadLocations()
+    init() { filterLocations(location.cameraPosition.region)}
+    
+    func selectLocation(_ location: Location) { lightHaptic()
+        selectedLocation = nil
+        selectedLocation = location
+        view.showLocation = true
+        loadData(location: location)
+        self.location.zoomToLocation(location: location)
     }
     
-    func save() {
-        if let favoriteData = try? JSONEncoder().encode(favoriteLocations) {
-            UserDefaults.standard.set(favoriteData, forKey: "favoriteLocations")
-            print("Favorite locations saved: \(favoriteLocations)")
-        }
-        if let visitedData = try? JSONEncoder().encode(visitedLocations) {
-            UserDefaults.standard.set(visitedData, forKey: "visitedLocations")
-            print("Visited locations saved: \(visitedLocations)")
-        }
-    }
-
-    func loadLocations() {
-        if let data = UserDefaults.standard.data(forKey: "favoriteLocations"),
-           let decoded = try? JSONDecoder().decode([Location].self, from: data) {
-            self.favoriteLocations = decoded
-            print("Favorite locations loaded: \(favoriteLocations)")
-        }
-        if let data = UserDefaults.standard.data(forKey: "visitedLocations"),
-           let decoded = try? JSONDecoder().decode([Location].self, from: data) {
-            self.visitedLocations = decoded
-            print("Visited locations loaded: \(visitedLocations)")
-        }
-    }
-    
-    func filterLocations(in region: MKCoordinateRegion?) {
-        self.location.lastSavedCameraPosition = .region(region!)
-        
-        if let selectedTag = selectedTag {
-            shownLocations = locations.filter { location in
-                return location.tags.contains(selectedTag)
+    func loadData(location: Location) {
+        Task {
+            do {
+                let result = try await APIService.shared.loadData(for: location)
+                await MainActor.run {
+                    self.selectedLocation?.description = result.description
+                    self.selectedLocation?.images = result.imageUrls
+                }
+            } catch {
+                print("Error: \(error)")
             }
-            self.search = selectedTag
-        } else {
-            shownLocations = locations
         }
+    }
+    
+    func dismissLocationView() { lightHaptic()
+        view.showLocation = false
+        selectedLocation = nil
+        location.unZoom()
+    }
+    
+    func filterLocations(_ region: MKCoordinateRegion?) {
+        guard let region = region else { return }
+        location.lastSavedPosition = .region(region)
         
-        guard let shownLocations = shownLocations else { return }
+        // First filter by tag
+        var filtered = selectedTag != nil ?
+        locations.filter { $0.tags.contains(selectedTag!) } :
+        locations
         
-        let mapRect = createMapRect(region: region!, regionSize: 1.5)
-        let zoom = region!.span.latitudeDelta
-        
-        self.shownLocations = shownLocations.filter { location in
-            let mapPoint = MKMapPoint(CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude))
+        // Then filter by map bounds
+        let mapRect = createMapRect(region: region, regionSize: 1.5)
+        filtered = filtered.filter { location in
+            let mapPoint = MKMapPoint(CLLocationCoordinate2D(
+                latitude: location.latitude,
+                longitude: location.longitude
+            ))
             return mapRect.contains(mapPoint)
         }
         
+        // Finally filter by zoom level priority
+        let maxPriority = calculateMaxPriority(for: region.span.latitudeDelta)
+        filtered = filtered.filter { $0.priority <= maxPriority }
         
-        
-        let maxPriority: Int
-        if zoom >= 9 {
-            maxPriority = selectedTag != nil ? 3 : 1
-        } else if zoom >= 6 {
-            maxPriority = selectedTag != nil ? 4 : 2
-        } else if zoom >= 4 {
-            maxPriority = selectedTag != nil ? 5 : 3
-        } else if zoom >= 2 {
-            maxPriority = selectedTag != nil ? 6 : 4
-        } else if zoom >= 0.5 {
-            maxPriority = selectedTag != nil ? 7 : 5
-        } else if zoom >= 0.25 {
-            maxPriority = selectedTag != nil ? 8 : 6
-        } else if zoom >= 0.15 {
-            maxPriority = selectedTag != nil ? 9 : 7
-        } else {
-            maxPriority = Int.max
-        }
-        
-        self.shownLocations = shownLocations.filter { $0.priority <= maxPriority }
-        
-        //        print("Latitude span: \(region.span.latitudeDelta)")
-        //        print("Longitude span: \(region.span.longitudeDelta)")
+        shownLocations = filtered
     }
     
-    
+    func calculateMaxPriority(for zoom: Double) -> Int {
+        let hasTag = selectedTag != nil
+        switch zoom {
+        case ...0.15:  return Int.max
+        case ...0.25:  return hasTag ? 9 : 7
+        case ...0.5:   return hasTag ? 8 : 6
+        case ...2:     return hasTag ? 7 : 5
+        case ...4:     return hasTag ? 6 : 4
+        case ...6:     return hasTag ? 5 : 3
+        case ...9:     return hasTag ? 4 : 2
+        default:       return hasTag ? 3 : 1
+        }
+    }
     
     func createMapRect(region: MKCoordinateRegion, regionSize: Double) -> MKMapRect {
         let topLeft = CLLocationCoordinate2D(latitude: region.center.latitude + (region.span.latitudeDelta/regionSize), longitude: region.center.longitude - (region.span.longitudeDelta/regionSize))
@@ -119,36 +101,6 @@ import MapKit
         return mapRect
     }
     
-    func selectLocation(location: Location) {
-        selectedLocation = nil
-        images = nil
-        selectedImage = nil
-        selectedLocation = location
-        view.showLocation = true
-        if selectedLocation!.isExample {
-            
-            // better example management later
-            self.description = "Big Sur is a stunning coastal region in California, known for its dramatic cliffs, pristine beaches, and lush forests. With its rugged terrain and breathtaking views of the Pacific Ocean, Big Sur offers a unique blend of natural beauty and serenity, making it a popular destination for outdoor enthusiasts and nature lovers alike."
-            self.images =  [UIImage(named: "Big Sur")!, UIImage(named: "Big Sur 2")!, UIImage(named: "Big Sur 3")!]
-            
-        } else {
-            loadDescription(location: location)
-        }
-        self.location.zoomToLocation(location: location)
-        lightHaptic()
-    }
-    
-    
-    func dismissLocationView() {
-        view.showLocation = false
-        selectedLocation = nil
-        images = nil
-        selectedImage = nil
-        description = "" // make nil
-        location.unZoom()
-        lightHaptic()
-    }
-    
     func calculateDistance(from: CLLocationCoordinate2D?, to: CLLocationCoordinate2D) -> String {
         guard let from = from else { return "0.0" }
         
@@ -158,8 +110,80 @@ import MapKit
         let distanceInMeters = fromLocation.distance(from: toLocation)
         let distanceInMiles = distanceInMeters / 1609.344
         let formattedDistance = String(format: "%.0f", distanceInMiles)
-
-        return String("\(formattedDistance) miles away ")
         
+        return String("\(formattedDistance) miles away ")
+    }
+}
+
+@Observable class LocationManager: NSObject, CLLocationManagerDelegate {
+    var locationManager = CLLocationManager()
+    var userLocation: CLLocationCoordinate2D?
+    
+    var zoomLevel = 1.0
+    
+    // regular cameraPosition is nill while screen is moving
+    var cameraPosition: MapCameraPosition = .region(MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 37.0, longitude: -119.8),
+        span: MKCoordinateSpan(latitudeDelta: 11.0, longitudeDelta: 11.0))
+    ) { didSet { lastSavedPosition = cameraPosition }}
+    var savedPosition: MapCameraPosition?
+    var lastSavedPosition: MapCameraPosition = .region(MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 37.0, longitude: -119.8),
+        span: MKCoordinateSpan(latitudeDelta: 11.0, longitudeDelta: 11.0))
+    )
+    
+    override init() {
+        super.init()
+        self.locationManager.delegate = self
+        self.locationManager.requestWhenInUseAuthorization()
+        self.locationManager.requestLocation()
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        if let location = locations.last?.coordinate {
+            userLocation = location
+            updateCameraPosition()
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("Failed to get user location: \(error.localizedDescription)")
+    }
+    
+    func updateCameraPosition() {
+        if let userLocation = userLocation {
+            cameraPosition = .region(
+                MKCoordinateRegion(center: userLocation, span: MKCoordinateSpan(latitudeDelta: 10.0, longitudeDelta: 10.0)) // link these
+            )
+        }
+    }
+    
+    func zoomToLocation(location: Location) {
+        if savedPosition == nil {
+            self.savedPosition = lastSavedPosition
+        }
+        
+        if zoomLevel > 1 {
+            let region = MKCoordinateRegion(
+                center: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude),
+                span: MKCoordinateSpan(latitudeDelta: 0.7, longitudeDelta: 0.7)
+            )
+            
+            let offsetLatitude = -0.25
+            let offsetCenterCoordinate = CLLocationCoordinate2D(
+                latitude: location.latitude + offsetLatitude,
+                longitude: location.longitude
+            )
+            let offsetRegion = MKCoordinateRegion(center: offsetCenterCoordinate, span: region.span)
+            self.cameraPosition = .region(offsetRegion)
+        }
+    }
+    
+    func unZoom() {
+        if let savedPosition = savedPosition {
+            self.cameraPosition = savedPosition
+        }
+        savedPosition = nil
+        self.cameraPosition = cameraPosition
     }
 }

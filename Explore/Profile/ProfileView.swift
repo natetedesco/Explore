@@ -7,7 +7,6 @@
 import SwiftUI
 
 struct ProfileView: View {
-    @State var profile = Profile()
     @State var model: Model
     
     var body: some View {
@@ -17,8 +16,8 @@ struct ProfileView: View {
                 .padding(.bottom)
             
             HStack(spacing: 48) {
-                TabButton(title: "FAVORITED", toggle: $profile.toggle, value: 0)
-                TabButton(title: "VISITED", toggle: $profile.toggle, value: 1)
+                TabButton(title: "FAVORITED", toggle: $model.view.toggle, value: 0)
+                TabButton(title: "VISITED", toggle: $model.view.toggle, value: 1)
 //                TabButton(title: "TRIPS", toggle: $toggle, value: 2) //
             }
             .padding(.bottom, 8)
@@ -26,17 +25,17 @@ struct ProfileView: View {
             Divider()
                 .padding(.horizontal, -20)
             
-            if profile.toggle == 0 {
+            if model.view.toggle == 0 {
                 FavoriteLocations(model: model)
             }
             
-            if profile.toggle == 1 {
+            if model.view.toggle == 1 {
                 VisitedLocations(model: model)
 //                    ExplorePassport()
 //                        .padding(.top)
             }
             
-            if profile.toggle == 2 {
+            if model.view.toggle == 2 {
                 VStack(alignment: .center) {
                     Spacer()
                     Text("Create a Trip")
@@ -56,15 +55,13 @@ struct ProfileView: View {
         .padding(.top, 20)
         .background()
         // Location
-        .sheet(isPresented: $model.view.showLocation, onDismiss: {
-            model.selectedLocation = nil
-        }) {
-            LocationView(model: model, location: $model.selectedLocation)
-                .sheetMaterial()
-                .interactiveDismissDisabled()
-                .presentationDetents([.fraction(999/1000), .fraction(1/6), .fraction(4/10)], selection: .constant(PresentationDetent.fraction(4/10)))
-                .presentationBackgroundInteraction(.enabled(upThrough: .fraction(4/10)))
-        }
+//        .sheet(item: $model.selectedLocation) { $location in
+//            LocationView(model: model, location: $location)
+//                .sheetMaterial()
+//                .interactiveDismissDisabled()
+//                .presentationDetents([.fraction(999/1000), .fraction(1/6), .fraction(4/10)], selection: .constant(PresentationDetent.fraction(4/10)))
+//                .presentationBackgroundInteraction(.enabled(upThrough: .fraction(4/10)))
+//        }
     }
 }
 
@@ -82,9 +79,9 @@ struct FavoriteLocations: View {
     
     var body: some View {
         List {
-            ForEach(model.favoriteLocations) { location in
+            ForEach(StorageService.shared.favoriteLocations) { location in
                 Button {
-                    model.selectLocation(location: location)
+                    model.selectLocation(location)
                 } label : {
                     LocationListView(location: location)
                 }
@@ -98,8 +95,8 @@ struct FavoriteLocations: View {
         .padding(.top, -8)
     }
     func delete(at offsets: IndexSet) {
-        model.favoriteLocations.remove(atOffsets: offsets)
-        model.save()
+        StorageService.shared.favoriteLocations.remove(atOffsets: offsets)
+        StorageService.shared.save()
         }
 }
 
@@ -108,9 +105,9 @@ struct VisitedLocations: View {
     
     var body: some View {
         List {
-            ForEach(model.visitedLocations) { location in
+            ForEach(StorageService.shared.visitedLocations) { location in
                 Button {
-                    model.selectLocation(location: location)
+                    model.selectLocation(location)
                 } label : {
                     LocationListView(location: location)
                 }
@@ -124,8 +121,8 @@ struct VisitedLocations: View {
         .padding(.top, -8)
     }
     func delete(at offsets: IndexSet) {
-        model.visitedLocations.remove(atOffsets: offsets)
-        model.save()
+        StorageService.shared.visitedLocations.remove(atOffsets: offsets)
+        StorageService.shared.save()
         }
 }
 

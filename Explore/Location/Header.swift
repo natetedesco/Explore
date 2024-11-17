@@ -8,12 +8,12 @@ import SwiftUI
 import MapKit
 
 struct LocationHeader: View {
-    @State var model: Model
-    @Binding var location: Location?
+    @Environment(Model.self) private var model
+    @Binding var location: Location
     
     var body: some View {
         HStack {
-            Text(location?.location ?? "")
+            Text(location.location)
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .fontDesign(.rounded)
@@ -23,10 +23,10 @@ struct LocationHeader: View {
             Text(model.calculateDistance(
                 from: CLLocationCoordinate2D(latitude: model.location.userLocation?.latitude ?? 0.0,
                                              longitude: model.location.userLocation?.longitude ?? 0.0),
-                to: CLLocationCoordinate2D(latitude: location?.latitude ?? 0, longitude: location?.longitude ?? 0)))
-                .font(.footnote)
-                .foregroundStyle(.tertiary)
-                .fontDesign(.rounded)
+                to: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)))
+            .font(.footnote)
+            .foregroundStyle(.tertiary)
+            .fontDesign(.rounded)
         }
     }
 }

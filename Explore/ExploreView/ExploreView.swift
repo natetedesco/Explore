@@ -11,35 +11,40 @@ struct SearchView: View {
     @State var model: Model
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            
-            // Top Bar
-            SearchBar(model: model)
-            
-            // Search Filter Buttons
-            ScrollView(.horizontal) {
-                HStack {
-                    // Filter Buttons
-                    ForEach(locationTags, id: \.self) { tag in
-                        FilterButton(model: model, tag: tag)
+        
+//        TabView {
+            VStack(alignment: .leading, spacing: 16) {
+                
+                // Top Bar
+                SearchBar(model: model)
+                
+                // Search Filter Buttons
+                ScrollView(.horizontal) {
+                    HStack {
+                        // Filter Buttons
+                        ForEach(locationTags, id: \.self) { tag in
+                            FilterButton(model: model, tag: tag)
+                        }
                     }
+                    .animation(.default, value: model.selectedTag)
+                    .animation(.default, value: model.view.showResults)
+                    .padding(.leading)
                 }
-                .animation(.default, value: model.selectedTag)
-                .animation(.default, value: model.view.showResults)
-                .padding(.leading)
+                .padding(.horizontal, -16)
+                .scrollIndicators(.hidden)
+//                
+                if model.view.detent == .fraction(4/10) && model.selectedTag == nil {
+                    NoSearchText(text: "Search for a location or select a type of location to start exploring.")
+                        .padding(.bottom, 56)
+                }
             }
-            .padding(.horizontal, -16)
-            .scrollIndicators(.hidden)
-            
-            if model.view.detent == .fraction(4/10) && model.selectedTag == nil {
-                NoSearchText(text: "Search for a location or select a type of location to start exploring.")
-                    .padding(.bottom, 56)
+            .padding(.top)
+            .padding(.horizontal)
+            .frame(maxHeight: .infinity, alignment: .top)
+            .darkBackground()
+            .onAppear {
+                model.view.detent = .fraction(1/6)
             }
-        }
-        .padding(.top)
-        .padding(.horizontal)
-        .frame(maxHeight: .infinity, alignment: .top)
-        .darkBackground()
         
         // Profile
         .sheet(isPresented: $model.view.showProfile) {
@@ -55,8 +60,11 @@ struct SearchView: View {
         .sheet(isPresented: $model.view.showLocation, onDismiss: {
             model.selectedLocation = nil
         }) {
-            LocationView(model: model, location: $model.selectedLocation)
-                .sheetMaterial()
+            LocationView(model: model, location: Binding(
+                get: { model.selectedLocation ?? exampleLocation },
+                set: { model.selectedLocation = $0 }
+            ))                .sheetMaterial()
+                .presentationDragIndicator(.visible)
                 .interactiveDismissDisabled()
                 .presentationDetents([.fraction(999/1000), .fraction(1/6), .fraction(4/10)], selection: .constant(PresentationDetent.fraction(4/10)))
                 .presentationBackgroundInteraction(.enabled(upThrough: .fraction(4/10)))

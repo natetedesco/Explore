@@ -19,10 +19,10 @@ struct LocationButtons: View {
                 lightHaptic()
             } label: {
                 VStack {
-                    Image(systemName: model.favoriteLocations.contains(location) ? "bookmark.fill" : "bookmark")
+                    Image(systemName: StorageService.shared.favoriteLocations.contains(location) ? "bookmark.fill" : "bookmark")
                         .font(.title3)
                         .fontWeight(.medium)
-                    Text(model.favoriteLocations.contains(location) ? "favorited" : "favorite")
+                    Text(StorageService.shared.favoriteLocations.contains(location) ? "favorited" : "favorite")
                         .font(.caption2)
                         .fontWeight(.semibold)
                 }
@@ -32,14 +32,13 @@ struct LocationButtons: View {
                 .padding(.vertical, 12)
                 .background(.green)
                 .cornerRadius(20)
-                
             }
             VStack {
                 
                 Button {
                     saveToVisited(location: location)
                 } label: {
-                    Image(systemName: model.visitedLocations.contains(location) ? "checkmark.circle.fill" : "checkmark.circle") // fill if visited
+                    Image(systemName: StorageService.shared.visitedLocations.contains(location) ? "checkmark.circle.fill" : "checkmark.circle") // fill if visited
                         .font(.title3)
                         .fontWeight(.medium)
                     Text("Visited")
@@ -72,28 +71,28 @@ struct LocationButtons: View {
     }
     
     func saveToFavorites(location: Location) {
-        if model.favoriteLocations.contains(location) {
-            model.favoriteLocations.removeAll(where: { $0 == location })
+        if StorageService.shared.favoriteLocations.contains(location) {
+            StorageService.shared.favoriteLocations.removeAll(where: { $0 == location })
         } else {
-            model.favoriteLocations.append(Location(id: location.id, name: location.name, location: location.location, priority: location.priority, latitude: location.latitude, longitude: location.longitude))
+            StorageService.shared.favoriteLocations.append(Location(id: location.id, name: location.name, location: location.location, priority: location.priority, latitude: location.latitude, longitude: location.longitude))
         }
-        model.save()
+        StorageService.shared.save()
     }
     
     func saveToVisited(location: Location) {
-        if model.visitedLocations.contains(location) {
-            model.visitedLocations.removeAll(where: { $0 == location })
+        if StorageService.shared.visitedLocations.contains(location) {
+            StorageService.shared.visitedLocations.removeAll(where: { $0 == location })
         } else {
-            model.visitedLocations.append(Location(id: location.id, name: location.name, location: location.location, priority: location.priority, latitude: location.latitude, longitude: location.longitude))
+            StorageService.shared.visitedLocations.append(Location(id: location.id, name: location.name, location: location.location, priority: location.priority, latitude: location.latitude, longitude: location.longitude))
         }
-        model.save()
+        StorageService.shared.save()
     }
 }
 
-#Preview {
-    ZStack{}
-        .sheet(isPresented: .constant(true)) {
-            LocationView(model: Model(), location: .constant(locations[0]))
-                .presentationDetents([.large])
-        }
-}
+//#Preview {
+//    ZStack{}
+//        .sheet(isPresented: .constant(true)) {
+//            LocationView(model: Model(), location: locations[0])
+//                .presentationDetents([.large])
+//        }
+//}

@@ -38,7 +38,7 @@ struct ImageView: View {
         .onTapGesture {
             model.view.showImage = false
             withAnimation {
-                model.selectedImage = nil
+                model.view.selectedImage = nil
             }
         }
         .gesture(
@@ -46,7 +46,7 @@ struct ImageView: View {
                 .onChanged { _ in
                     model.view.showImage = false
                     withAnimation {
-                        model.selectedImage = nil
+                        model.view.selectedImage = nil
                     }
                 }
                 .onEnded { _ in }
