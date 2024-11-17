@@ -117,10 +117,10 @@
 				8BFE649D2BFCDFBA003B373B /* LocationButtons.swift */,
 				8BFE649F2BFCE08D003B373B /* LocationImages.swift */,
 				8BFE64A52BFCE207003B373B /* ImageView.swift */,
-				8BF5A2142C29B45E004C3C93 /* Weather.swift */,
 				8BFE64A72BFCEEDA003B373B /* Conditions.swift */,
+				8BF5A2142C29B45E004C3C93 /* Weather.swift */,
 				8BFE64A92C038FA7003B373B /* ReviewView.swift */,
-				8BFE64A32BFCE1A7003B373B /* LargeLocationView */,
+				8BFE64972BFB9947003B373B /* LargeLocationView.swift */,
 			);
 			path = Location;
 			sourceTree = "<group>";
@@ -147,14 +147,6 @@
 				8B25A37D2BF9C0DE00F9914B /* Components */,
 			);
 			path = Views;
-			sourceTree = "<group>";
-		};
-		8BFE64A32BFCE1A7003B373B /* LargeLocationView */ = {
-			isa = PBXGroup;
-			children = (
-				8BFE64972BFB9947003B373B /* LargeLocationView.swift */,
-			);
-			path = LargeLocationView;
 			sourceTree = "<group>";
 		};
 		8BFE64A42BFCE1B4003B373B /* MapSettings */ = {
@@ -185,7 +177,6 @@
 		F0DCE3A12AD20E6E009D4DF8 /* Explore */ = {
 			isa = PBXGroup;
 			children = (
-				8BF5A2132C292F3F004C3C93 /* Explore.entitlements */,
 				F0DCE3A22AD20E6E009D4DF8 /* ExploreApp.swift */,
 				F04AA4982AD2F98C00D0BE7B /* Model.swift */,
 				8B9E447C2C09139800363C4E /* Location.swift */,
@@ -196,6 +187,7 @@
 				8B49B5CB2BF3F1FA00EC7791 /* Views */,
 				F0DCE3A62AD20E6F009D4DF8 /* Assets.xcassets */,
 				8B8976FE2C269A4B00FF1293 /* locations.csv */,
+				8BF5A2132C292F3F004C3C93 /* Explore.entitlements */,
 				F0DCE3A82AD20E6F009D4DF8 /* Preview Content */,
 			);
 			path = Explore;

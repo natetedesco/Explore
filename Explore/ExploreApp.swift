@@ -6,8 +6,7 @@
 
 import SwiftUI
 
-@main
-struct ExploreApp: App {
+@main struct ExploreApp: App {
     @State var model = Model()
     
     var body: some Scene {
