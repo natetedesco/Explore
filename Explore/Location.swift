@@ -5,10 +5,6 @@
 //
 
 import Foundation
-import MapKit
-import SwiftUI
-
-
 
 struct Location: Codable, Identifiable, Equatable, Hashable {
     var id = UUID()

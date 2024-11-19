@@ -8,12 +8,12 @@ import SwiftUI
 
 struct ImageView: View {
     @State var model: Model
-    @State var image: UIImage?
+    @State var image: ImageWrapper
     @State var rotate = false
     
     var body: some View {
         ZStack {
-            Image(uiImage: image!)
+            Image(uiImage: image.uiImage)
                 .resizable()
                 .aspectRatio(contentMode: .fit)
                 .rotationEffect(Angle(degrees: rotate ? 90 : 0))
@@ -36,17 +36,15 @@ struct ImageView: View {
         .background(.black)
         .frame(maxHeight: .infinity)
         .onTapGesture {
-            model.view.showImage = false
             withAnimation {
-                model.view.selectedImage = nil
+                model.selectedImage = nil
             }
         }
         .gesture(
             DragGesture()
                 .onChanged { _ in
-                    model.view.showImage = false
                     withAnimation {
-                        model.view.selectedImage = nil
+                        model.selectedImage = nil
                     }
                 }
                 .onEnded { _ in }

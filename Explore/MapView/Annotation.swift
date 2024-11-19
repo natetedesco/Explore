@@ -43,7 +43,7 @@ struct CustomAnnotation: View {
         }
         .clipShape(Circle())
         .shadow(radius: 10)
-        .opacity(model.shownLocations?.contains(location) ?? false ? 1.0 : 0.0)
+        .opacity(model.map.shownLocations?.contains(location) ?? false ? 1.0 : 0.0)
         .animation(.default, value: model.selectedLocation)
         .onTapGesture { model.selectLocation(location) }
     }

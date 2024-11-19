@@ -12,12 +12,12 @@ struct ProfileView: View {
     var body: some View {
         VStack(alignment: .leading) {
             
-            TopProfileBar(show: $model.view.showProfile)
+            TopProfileBar(show: $model.showProfile)
                 .padding(.bottom)
             
             HStack(spacing: 48) {
-                TabButton(title: "FAVORITED", toggle: $model.view.toggle, value: 0)
-                TabButton(title: "VISITED", toggle: $model.view.toggle, value: 1)
+                TabButton(title: "FAVORITED", toggle: $model.ProfileViewOption, value: 0)
+                TabButton(title: "VISITED", toggle: $model.ProfileViewOption, value: 1)
 //                TabButton(title: "TRIPS", toggle: $toggle, value: 2) //
             }
             .padding(.bottom, 8)
@@ -25,17 +25,17 @@ struct ProfileView: View {
             Divider()
                 .padding(.horizontal, -20)
             
-            if model.view.toggle == 0 {
+            if model.ProfileViewOption == 0 {
                 FavoriteLocations(model: model)
             }
             
-            if model.view.toggle == 1 {
+            if model.ProfileViewOption == 1 {
                 VisitedLocations(model: model)
 //                    ExplorePassport()
 //                        .padding(.top)
             }
             
-            if model.view.toggle == 2 {
+            if model.ProfileViewOption == 2 {
                 VStack(alignment: .center) {
                     Spacer()
                     Text("Create a Trip")

@@ -16,8 +16,8 @@ struct MapControlButtons: View {
             Button {
                 lightHaptic()
                 withAnimation {
-                    if let userLocation = model.location.userLocation {
-                        model.location.cameraPosition = .region(
+                    if let userLocation = model.map.userLocation {
+                        model.map.cameraPosition = .region(
                             MKCoordinateRegion(center: userLocation, span: MKCoordinateSpan(latitudeDelta: 0.5, longitudeDelta: 0.5))
                         )
                     }
@@ -35,7 +35,7 @@ struct MapControlButtons: View {
             // Settings
             Button {
                 lightHaptic()
-                model.view.showMapSettings.toggle()
+                model.showMapSettings.toggle()
             } label: {
                 Image(systemName: "map.fill")
                     .font(.callout)

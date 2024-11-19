@@ -41,20 +41,6 @@ class APIService {
         return (description, imageUrls)
     }
     
-//    func loadImage(from urlString: String) async throws -> UIImage {
-//        guard let url = URL(string: urlString) else {
-//            throw APIError.invalidURL
-//        }
-//        
-//        let (data, _) = try await URLSession.shared.data(from: url)
-//        
-//        guard let image = UIImage(data: data) else {
-//            throw APIError.invalidImageData
-//        }
-//        
-//        return image
-//    }
-    
     enum APIError: Error {
         case invalidResponse
         case invalidURL

@@ -34,7 +34,7 @@ struct SearchBar: View {
             // Profile Button
             Button {
                 if model.selectedTag == nil {
-                    model.view.showProfile.toggle()
+                    model.showProfile.toggle()
                 } else {
                     model.selectedTag = nil
                     model.search = ""

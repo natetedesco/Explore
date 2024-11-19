@@ -8,29 +8,7 @@ import Foundation
 import SwiftUI
 import MapKit
 
-@Observable class ViewModel {
-    var showMainSheet = true // always
-    var detent = PresentationDetent.fraction(1/6)
-    
-    // Explore
-    var showResults = false
-    var showLocation = false
-    var showImage = false
-    var selectedImage: UIImage?
 
-    
-    // Profile
-    var showProfile = false
-    var showLeaveReview = false
-    var toggle = 0 { didSet { lightHaptic() }}
-
-    
-    // Settings
-    var showMapSettings = false
-    var showSearchThisArea = false
-    var mapStyle: MapStyle = .standard
-    var mapColorScheme: ColorScheme = .dark
-}
 
 @Observable class StorageService {
     static let shared = StorageService()

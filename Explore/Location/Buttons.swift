@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct LocationButtons: View {
-    @State var model: Model
+    @Environment(Model.self) private var model
     @State var location: Location
     
     var body: some View {

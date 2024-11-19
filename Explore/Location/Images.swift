@@ -1,16 +1,15 @@
 //
 //  LocationImages.swift
 //  Explore
-//
 //  Created by Developer on 5/21/24.
 //
 
 import SwiftUI
 
 struct LocationImages: View {
-    @State var model: Model
+    @Environment(Model.self) private var model
     @Binding var location: Location
-    
+
     var body: some View {
         if let images = location.images {
             ScrollView(.horizontal) {
@@ -24,8 +23,8 @@ struct LocationImages: View {
                                 .cornerRadius(20)
                                 .onTapGesture {
                                     withAnimation {
-                                        model.view.selectedImage = image.asUIImage()  // Pass the actual image instead of URL
-                                        model.view.showImage = true
+                                        model.selectedImage = ImageWrapper(uiImage: image.asUIImage()) // Pass the actual image instead of URL
+//                                        model.showImage = true
                                     }
                                 }
                         } placeholder: {

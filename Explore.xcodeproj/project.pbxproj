@@ -143,6 +143,7 @@
 		F0DCE3962AD20E6E009D4DF8 = {
 			isa = PBXGroup;
 			children = (
+				F0DCE3A22AD20E6E009D4DF8 /* ExploreApp.swift */,
 				F0DCE3A12AD20E6E009D4DF8 /* Explore */,
 				F0DCE3A02AD20E6E009D4DF8 /* Products */,
 			);
@@ -159,7 +160,6 @@
 		F0DCE3A12AD20E6E009D4DF8 /* Explore */ = {
 			isa = PBXGroup;
 			children = (
-				F0DCE3A22AD20E6E009D4DF8 /* ExploreApp.swift */,
 				F04AA4982AD2F98C00D0BE7B /* Model.swift */,
 				8BD7705E2C220F6300AE9BA6 /* API Request.swift */,
 				8B9E447C2C09139800363C4E /* ViewModel & Storage.swift */,

@@ -20,9 +20,9 @@ struct LocationHeader: View {
             Text("•")
                 .foregroundStyle(.tertiary)
                 .padding(.horizontal, -4)
-            Text(model.calculateDistance(
-                from: CLLocationCoordinate2D(latitude: model.location.userLocation?.latitude ?? 0.0,
-                                             longitude: model.location.userLocation?.longitude ?? 0.0),
+            Text(model.map.calculateDistance(
+                from: CLLocationCoordinate2D(latitude: model.map.userLocation?.latitude ?? 0.0,
+                                             longitude: model.map.userLocation?.longitude ?? 0.0),
                 to: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)))
             .font(.footnote)
             .foregroundStyle(.tertiary)

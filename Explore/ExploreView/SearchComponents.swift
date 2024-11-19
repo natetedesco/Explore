@@ -15,7 +15,6 @@ struct FilterButton: View {
     var body: some View {
         Button {
             withAnimation {
-                model.view.showResults = true
                 model.selectedTag = tag
             }
             lightHaptic()

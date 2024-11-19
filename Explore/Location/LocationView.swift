@@ -4,9 +4,6 @@
 //  Created by Developer on 11/17/24.
 //
 
-
-// Add visits
-
 import SwiftUI
 
 struct LocationView: View {
@@ -15,7 +12,6 @@ struct LocationView: View {
     @State private var isExpanded: Bool = false
     
     var body: some View {
-        
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading) {
@@ -23,15 +19,14 @@ struct LocationView: View {
                     // Header
                     LocationHeader(location: $location)
                         .padding(.top, -24)
-//                        .padding(.bottom, 8)
                     
                     // Buttons
-                    LocationButtons(model: model, location: location)
+                    LocationButtons(location: location)
                         .padding(.bottom, 8)
 //                        .padding(.top)
                     
                     //                     Images
-                    LocationImages(model: model, location: $location)
+                    LocationImages(location: $location)
                         .padding(.bottom, 24)
                     
                     Text("About")
@@ -170,19 +165,23 @@ struct LocationView: View {
                 }
             }
             .scrollIndicators(.hidden)
-            //                .background()
             .darkBackground()
         }
-        .fullScreenCover(isPresented: $model.view.showImage) {
-            ImageView(model: model, image: model.view.selectedImage)
+        .fullScreenCover(item: $model.selectedImage) { image in
+            ImageView(model: model, image: image)
                 .presentationBackground(.ultraThickMaterial)
                 .presentationCornerRadius(60)
         }
-        .sheet(isPresented: $model.view.showLeaveReview) {
+        .sheet(isPresented: $model.showLeaveReview) {
             ReviewView()
                 .presentationDetents([.fraction(9999/10000)])
         }
     }
+}
+
+struct ImageWrapper: Identifiable {
+    let id = UUID()
+    let uiImage: UIImage
 }
 
 struct RatingType: View {

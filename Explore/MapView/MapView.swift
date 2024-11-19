@@ -13,11 +13,11 @@ struct ContentView: View {
     var body: some View {
         ZStack {
             
-            Map(position: $model.location.cameraPosition) {
+            Map(position: $model.map.cameraPosition) {
                 UserAnnotation()
                 
                 // Annotations
-                ForEach(model.shownLocations ?? []) { location in
+                ForEach(model.map.shownLocations ?? []) { location in
                     Annotation(location.name, coordinate: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)) {
                         VStack {
                             if UIImage(named: location.name) != nil {
@@ -55,20 +55,20 @@ struct ContentView: View {
                         }
                         .clipShape(Circle())
                         .shadow(radius: 10)
-                        .opacity(model.shownLocations?.contains(location) ?? false ? 1.0 : 0.0)
+                        .opacity(model.map.shownLocations?.contains(location) ?? false ? 1.0 : 0.0)
                         .animation(.default, value: model.selectedLocation)
                         .onTapGesture { model.selectLocation(location) }
                     }
                 }
             }
-            .environment(\.colorScheme, model.view.mapColorScheme)
+            .environment(\.colorScheme, model.mapColorScheme)
             .mapStyle(.standard(pointsOfInterest: .including([])))
             .accentColor(.green.opacity(0.8))
             .onMapCameraChange { map in
                 withAnimation {
                     let region = map.region
-                    model.filterLocations(region)
-                    model.location.zoomLevel = region.span.latitudeDelta
+                    model.map.filterLocations(region, tag: model.selectedTag)
+                    model.map.zoomLevel = region.span.latitudeDelta
                 }
             }
             
@@ -77,15 +77,15 @@ struct ContentView: View {
             
             MapControlButtons(model: model)
             
-            if model.view.showSearchThisArea { SearchThisArea() }
+            if model.showSearchThisArea { SearchThisArea() }
         }
         .accentColor(.green.opacity(0.8))
         .animation(.bouncy(duration: 0.3), value: model.selectedLocation) // duplicating annotation scale animation here makes it work ;)
-        .sheet(isPresented: $model.view.showMainSheet) {
+        .sheet(isPresented: .constant(true)) {
             SearchView(model: model)
                 .sheetMaterial()
                 .interactiveDismissDisabled()
-                .presentationDetents([.large, .fraction(4/10), .fraction(1/6)], selection: $model.view.detent)
+                .presentationDetents([.large, .fraction(4/10), .fraction(1/6)], selection: $model.detent)
                 .presentationBackgroundInteraction(.enabled)
         }
     }
@@ -95,17 +95,3 @@ struct ContentView: View {
     ContentView(model: Model())
 }
 
-struct testView: View {
-    
-    var body: some View {
-        VStack {
-            Button {
-                // for each
-                
-            } label: {
-                Text("hello")
-                    .foregroundStyle(.white)
-            }
-        }
-    }
-}

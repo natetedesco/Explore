@@ -27,13 +27,12 @@ struct SearchView: View {
                         }
                     }
                     .animation(.default, value: model.selectedTag)
-                    .animation(.default, value: model.view.showResults)
                     .padding(.leading)
                 }
                 .padding(.horizontal, -16)
                 .scrollIndicators(.hidden)
 //                
-                if model.view.detent == .fraction(4/10) && model.selectedTag == nil {
+                if model.detent == .fraction(4/10) && model.selectedTag == nil {
                     NoSearchText(text: "Search for a location or select a type of location to start exploring.")
                         .padding(.bottom, 56)
                 }
@@ -43,11 +42,11 @@ struct SearchView: View {
             .frame(maxHeight: .infinity, alignment: .top)
             .darkBackground()
             .onAppear {
-                model.view.detent = .fraction(1/6)
+                model.detent = .fraction(1/6)
             }
         
         // Profile
-        .sheet(isPresented: $model.view.showProfile) {
+        .sheet(isPresented: $model.showProfile) {
             VStack {
                 ProfileView(model: model)
             }
@@ -57,7 +56,7 @@ struct SearchView: View {
         }
         
         // Location
-        .sheet(isPresented: $model.view.showLocation, onDismiss: {
+        .sheet(isPresented: $model.showLocation, onDismiss: {
             model.selectedLocation = nil
         }) {
             LocationView(model: model, location: Binding(
@@ -70,7 +69,7 @@ struct SearchView: View {
                 .presentationBackgroundInteraction(.enabled(upThrough: .fraction(4/10)))
         }
         // Map Settings
-        .sheet(isPresented: $model.view.showMapSettings) {
+        .sheet(isPresented: $model.showMapSettings) {
             MapSettingsView(model: model)
                 .presentationDetents([.fraction(9999/10000)])
                 .presentationBackgroundInteraction(.enabled(upThrough: .fraction(4/10)))

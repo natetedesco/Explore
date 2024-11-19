@@ -10,26 +10,47 @@ import CoreLocation
 import MapKit
 
 @Observable class Model {
-    var view = ViewModel()
-    var location = LocationManager()
+    var map = MapManager()
     
+    // Main UI State
+    var detent = PresentationDetent.fraction(1/6)
+    
+    // Explore
     var search: String = ""
-    var selectedTag: String? { didSet { filterLocations(location.lastSavedPosition.region) }}
+    var selectedTag: String? { didSet { map.filterLocations(map.lastSavedPosition.region, tag: selectedTag) }}
     
-    var shownLocations: [Location]?
+    // Location
     var selectedLocation: Location?
+    var showLocation = false
+    var selectedImage: ImageWrapper?
+
+    // Profile
+    var showProfile = false
+    var showLeaveReview = false
+    var ProfileViewOption = 0 { didSet { lightHaptic() }}
+
+    // Settings
+    var showMapSettings = false
+    var showSearchThisArea = false
+    var mapStyle: MapStyle = .standard
+    var mapColorScheme: ColorScheme = .dark
     
-    init() { filterLocations(location.cameraPosition.region)}
-    
-    func selectLocation(_ location: Location) { lightHaptic()
-        selectedLocation = nil
-        selectedLocation = location
-        view.showLocation = true
+    func selectLocation(_ location: Location) {
+        lightHaptic()
+        self.selectedLocation = location
+        showLocation = true
         loadData(location: location)
-        self.location.zoomToLocation(location: location)
+        self.map.zoomToLocation(location: location)
     }
     
-    func loadData(location: Location) {
+    func dismissLocationView() {
+        lightHaptic()
+        showLocation = false
+        self.selectedLocation = nil
+        map.unZoom()
+    }
+    
+    private func loadData(location: Location) {
         Task {
             do {
                 let result = try await APIService.shared.loadData(for: location)
@@ -42,21 +63,64 @@ import MapKit
             }
         }
     }
+}
+
+@Observable class MapManager: NSObject, CLLocationManagerDelegate {
+    var locationManager = CLLocationManager()
     
-    func dismissLocationView() { lightHaptic()
-        view.showLocation = false
-        selectedLocation = nil
-        location.unZoom()
+    var userLocation: CLLocationCoordinate2D?
+    var shownLocations: [Location]?
+        
+    var zoomLevel = 1.0
+    var cameraPosition: MapCameraPosition = .region(MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 37.0, longitude: -119.8),
+        span: MKCoordinateSpan(latitudeDelta: 11.0, longitudeDelta: 11.0))
+    ) { didSet { lastSavedPosition = cameraPosition }}
+    
+    var savedPosition: MapCameraPosition?
+    var lastSavedPosition: MapCameraPosition = .region(MKCoordinateRegion(
+        center: CLLocationCoordinate2D(latitude: 37.0, longitude: -119.8),
+        span: MKCoordinateSpan(latitudeDelta: 11.0, longitudeDelta: 11.0))
+    )
+    
+    override init() {
+        super.init()
+        self.locationManager.delegate = self
+        self.locationManager.requestWhenInUseAuthorization()
+        self.locationManager.requestLocation()
+        filterLocations(cameraPosition.region, tag: nil)
     }
     
-    func filterLocations(_ region: MKCoordinateRegion?) {
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        print("Failed to get user location: \(error.localizedDescription)")
+    }
+    
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        if let location = locations.last?.coordinate {
+            userLocation = location
+            updateCameraPosition()
+        }
+    }
+    func updateCameraPosition() {
+        if let userLocation = userLocation {
+            cameraPosition = .region(
+                MKCoordinateRegion(
+                    center: userLocation,
+                    span: MKCoordinateSpan(latitudeDelta: 10.0, longitudeDelta: 10.0)
+                )
+            )
+        }
+    }
+    
+    func filterLocations(_ region: MKCoordinateRegion?, tag: String?) {
         guard let region = region else { return }
-        location.lastSavedPosition = .region(region)
+        lastSavedPosition = .region(region)
         
         // First filter by tag
-        var filtered = selectedTag != nil ?
-        locations.filter { $0.tags.contains(selectedTag!) } :
-        locations
+        var filtered = tag != nil ?
+            locations.filter { $0.tags.contains(tag!) } :
+            locations
         
         // Then filter by map bounds
         let mapRect = createMapRect(region: region, regionSize: 1.5)
@@ -69,14 +133,14 @@ import MapKit
         }
         
         // Finally filter by zoom level priority
-        let maxPriority = calculateMaxPriority(for: region.span.latitudeDelta)
+        let maxPriority = calculateMaxPriority(for: region.span.latitudeDelta, tag: tag)
         filtered = filtered.filter { $0.priority <= maxPriority }
         
         shownLocations = filtered
     }
     
-    func calculateMaxPriority(for zoom: Double) -> Int {
-        let hasTag = selectedTag != nil
+    func calculateMaxPriority(for zoom: Double, tag: String?) -> Int {
+        let hasTag = tag != nil
         switch zoom {
         case ...0.15:  return Int.max
         case ...0.25:  return hasTag ? 9 : 7
@@ -90,15 +154,22 @@ import MapKit
     }
     
     func createMapRect(region: MKCoordinateRegion, regionSize: Double) -> MKMapRect {
-        let topLeft = CLLocationCoordinate2D(latitude: region.center.latitude + (region.span.latitudeDelta/regionSize), longitude: region.center.longitude - (region.span.longitudeDelta/regionSize))
-        let bottomRight = CLLocationCoordinate2D(latitude: region.center.latitude - (region.span.latitudeDelta/regionSize), longitude: region.center.longitude + (region.span.longitudeDelta/regionSize))
+        let topLeft = CLLocationCoordinate2D(
+            latitude: region.center.latitude + (region.span.latitudeDelta/regionSize),
+            longitude: region.center.longitude - (region.span.longitudeDelta/regionSize)
+        )
+        let bottomRight = CLLocationCoordinate2D(
+            latitude: region.center.latitude - (region.span.latitudeDelta/regionSize),
+            longitude: region.center.longitude + (region.span.longitudeDelta/regionSize)
+        )
         
         let a = MKMapPoint(topLeft)
         let b = MKMapPoint(bottomRight)
         
-        let mapRect = MKMapRect(origin: MKMapPoint(x:min(a.x,b.x), y:min(a.y,b.y)), size: MKMapSize(width: abs(a.x-b.x), height: abs(a.y-b.y)))
-        
-        return mapRect
+        return MKMapRect(
+            origin: MKMapPoint(x:min(a.x,b.x), y:min(a.y,b.y)),
+            size: MKMapSize(width: abs(a.x-b.x), height: abs(a.y-b.y))
+        )
     }
     
     func calculateDistance(from: CLLocationCoordinate2D?, to: CLLocationCoordinate2D) -> String {
@@ -113,50 +184,6 @@ import MapKit
         
         return String("\(formattedDistance) miles away ")
     }
-}
-
-@Observable class LocationManager: NSObject, CLLocationManagerDelegate {
-    var locationManager = CLLocationManager()
-    var userLocation: CLLocationCoordinate2D?
-    
-    var zoomLevel = 1.0
-    
-    // regular cameraPosition is nill while screen is moving
-    var cameraPosition: MapCameraPosition = .region(MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 37.0, longitude: -119.8),
-        span: MKCoordinateSpan(latitudeDelta: 11.0, longitudeDelta: 11.0))
-    ) { didSet { lastSavedPosition = cameraPosition }}
-    var savedPosition: MapCameraPosition?
-    var lastSavedPosition: MapCameraPosition = .region(MKCoordinateRegion(
-        center: CLLocationCoordinate2D(latitude: 37.0, longitude: -119.8),
-        span: MKCoordinateSpan(latitudeDelta: 11.0, longitudeDelta: 11.0))
-    )
-    
-    override init() {
-        super.init()
-        self.locationManager.delegate = self
-        self.locationManager.requestWhenInUseAuthorization()
-        self.locationManager.requestLocation()
-    }
-    
-    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        if let location = locations.last?.coordinate {
-            userLocation = location
-            updateCameraPosition()
-        }
-    }
-    
-    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        print("Failed to get user location: \(error.localizedDescription)")
-    }
-    
-    func updateCameraPosition() {
-        if let userLocation = userLocation {
-            cameraPosition = .region(
-                MKCoordinateRegion(center: userLocation, span: MKCoordinateSpan(latitudeDelta: 10.0, longitudeDelta: 10.0)) // link these
-            )
-        }
-    }
     
     func zoomToLocation(location: Location) {
         if savedPosition == nil {
@@ -165,7 +192,10 @@ import MapKit
         
         if zoomLevel > 1 {
             let region = MKCoordinateRegion(
-                center: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude),
+                center: CLLocationCoordinate2D(
+                    latitude: location.latitude,
+                    longitude: location.longitude
+                ),
                 span: MKCoordinateSpan(latitudeDelta: 0.7, longitudeDelta: 0.7)
             )
             

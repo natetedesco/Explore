@@ -15,8 +15,8 @@ import SwiftUI
                 .environment(model)
                 .accentColor(.green)
                 .onAppear {
-                    if model.location.locationManager.authorizationStatus == .notDetermined {
-                        model.location.locationManager.requestWhenInUseAuthorization()
+                    if model.map.locationManager.authorizationStatus == .notDetermined {
+                        model.map.locationManager.requestWhenInUseAuthorization()
                     }
                 }
         }
